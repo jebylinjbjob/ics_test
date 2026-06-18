@@ -4,13 +4,14 @@ import { render } from 'vitest-browser-svelte';
 import Page from './+page.svelte';
 
 describe('/+page.svelte', () => {
-	it('should render steps component', async () => {
+	it('should render ICS test sections', async () => {
 		render(Page);
 
-		const firstStep = page.getByRole('tab', { name: 'First' });
-		await expect.element(firstStep).toBeInTheDocument();
+		const heading = page.getByRole('heading', { name: 'ICS 行事曆測試' });
+		await expect.element(heading).toBeInTheDocument();
 
-		const nextButton = page.getByRole('button', { name: 'Next' });
-		await expect.element(nextButton).toBeInTheDocument();
+		const downloadLink = page.getByRole('link', { name: '下載 calendar.ics' });
+		await expect.element(downloadLink).toBeInTheDocument();
+		await expect.element(downloadLink).toHaveAttribute('href', '/calendar.ics?download=1');
 	});
 });
