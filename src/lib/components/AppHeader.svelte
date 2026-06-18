@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { CalendarIcon, CircleUserIcon, MenuIcon, SearchIcon } from '@lucide/svelte';
+	import { MenuIcon } from '@lucide/svelte';
 	import { AppBar } from '@skeletonlabs/skeleton-svelte';
 	import { resolve } from '$app/paths';
-	import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 
 	let {
@@ -14,13 +13,6 @@
 		showSearch?: boolean;
 		searchQuery?: string;
 	} = $props();
-
-	function handleSearchToggle() {
-		showSearch = !showSearch;
-		if (!showSearch) {
-			searchQuery = '';
-		}
-	}
 </script>
 
 <AppBar>
