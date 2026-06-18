@@ -85,11 +85,10 @@ jobs:
                     ports:
                       - containerPort: 80
                     env:
-
-
-
                       - name: TZ
                         value: "Asia/Taipei"
+                      - name: PUBLIC_GITHUB_REPO
+                        value: https://github.com/jebylinjbjob/ics_test/
                     resources:
                       requests:
                         memory: "128Mi"
