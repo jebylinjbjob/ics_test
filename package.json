@@ -56,12 +56,6 @@
 		"super-sitemap": "^1.0.12"
 	},
 	"pnpm": {
-		"overrides": {
-			"esbuild": ">=0.28.1",
-			"cookie": ">=0.7.0",
-			"fast-xml-parser": ">=5.3.6",
-			"rollup": ">=4.59.0"
-		},
 		"ignoredBuiltDependencies": [
 			"esbuild"
 		]
