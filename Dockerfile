@@ -13,7 +13,7 @@ ENV GIT_BRANCH=$GIT_BRANCH \
     GIT_IS_DIRTY=$GIT_IS_DIRTY \
     GIT_COMMIT_HASH=$GIT_COMMIT_HASH
 
-RUN npm install -g pnpm@9.15.9
+RUN npm install -g pnpm@10.34.1
 
 WORKDIR /app
 
@@ -22,6 +22,9 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 RUN pnpm run build
+
+# Remove devDependencies before copying to runner
+RUN pnpm prune --prod
 
 # ── Stage 2: Production ──────────────────────────────────────
 FROM node:20-alpine AS runner
