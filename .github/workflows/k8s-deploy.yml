@@ -1,0 +1,158 @@
+# ============================================
+# K3s 自動部署 — Python 專案
+# ============================================
+# 部署後網址：https://ics-test.jbjob.org
+# Push 到 main 分支即自動部署
+# GitHub Repo: jebylinjbjob/ics_test/
+# Runner label: k3s-runner
+# 確認 Runner 狀態：https://github.com/jebylinjbjob/ics_test//settings/actions/runners
+# ============================================
+
+name: Deploy to K3s (jbjob.org)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  APP_NAME: ics-test
+  REGISTRY: 192.168.1.21:30500
+  DOMAIN: jbjob.org
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, k3s-runner]
+    steps:
+      # 無 submodule 的專案使用下方這行即可
+      - uses: actions/checkout@v4
+
+      # ──────────────────────────────────────────────────────────
+      # [選用] 有私有 Git Submodule？
+      # 請刪除上方的 `- uses: actions/checkout@v4`，改用下方這段：
+      #   1. 在 GitHub Settings → Secrets 新增 SUBMODULE_PAT（需有 repo 讀取權限）
+      #   2. 取消以下三行的註解
+      # ──────────────────────────────────────────────────────────
+      # - uses: actions/checkout@v4
+      #   with:
+      #     submodules: recursive
+      #     token: ${{ secrets.SUBMODULE_PAT }}
+
+      # ──────────────────────────────────────────────────────────
+      # [選用] 動態建立不進版控的檔案（License Key、設定檔等）
+      # 若你的專案在 build 前需要此類檔案（例如 devextreme-license.ts），
+      # 請取消以下步驟的註解並修改，否則 ng build 會因找不到 import 而失敗。
+      # Secret 需先在 GitHub Settings → Secrets 設定。
+      # ──────────────────────────────────────────────────────────
+      # - name: 建立 License / Secret 檔案
+      #   run: |
+      #     echo "export const licenseKey = '${{ secrets.YOUR_LICENSE_KEY }}';" > src/your-license.ts
+
+      - name: Create Namespace (if not exists)
+        run: |
+          kubectl create namespace ${APP_NAME} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Build & Push Image
+        run: |
+          TAG="${REGISTRY}/${APP_NAME}:${GITHUB_SHA::7}"
+          docker build -t "$TAG" -t "${REGISTRY}/${APP_NAME}:latest" -f Dockerfile .
+          docker push "$TAG"
+          docker push "${REGISTRY}/${APP_NAME}:latest"
+          echo "IMAGE=$TAG" >> $GITHUB_ENV
+
+      - name: Deploy to K3s
+        run: |
+          kubectl apply --server-side --force-conflicts -f - <<EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: ${APP_NAME}
+            namespace: ${APP_NAME}
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: ${APP_NAME}
+            template:
+              metadata:
+                labels:
+                  app: ${APP_NAME}
+              spec:
+                terminationGracePeriodSeconds: 30
+                containers:
+                  - name: ${APP_NAME}
+                    image: ${IMAGE}
+                    ports:
+                      - containerPort: 80
+                    env:
+
+
+
+                      - name: TZ
+                        value: "Asia/Taipei"
+                    resources:
+                      requests:
+                        memory: "128Mi"
+                        cpu: "100m"
+                      limits:
+                        memory: "512Mi"
+                        cpu: "500m" 
+                    readinessProbe:
+                      tcpSocket:
+                        port: 80
+                      initialDelaySeconds: 5
+                      periodSeconds: 5
+                      failureThreshold: 6
+                    livenessProbe:
+                      tcpSocket:
+                        port: 80
+                      initialDelaySeconds: 15
+                      periodSeconds: 30
+                      failureThreshold: 3
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: ${APP_NAME}-svc
+            namespace: ${APP_NAME}
+          spec:
+            type: ClusterIP
+            selector:
+              app: ${APP_NAME}
+            ports:
+              - port: 80
+                targetPort: 80
+          ---
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: ${APP_NAME}-ingress
+            namespace: ${APP_NAME}
+          spec:
+            ingressClassName: traefik
+            rules:
+              - host: ${APP_NAME}.jbjob.org
+                http:
+                  paths:
+                    - path: /
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: ${APP_NAME}-svc
+                          port:
+                            number: 80
+          EOF
+
+          COMMIT_MSG=$(git log -1 --pretty=%s | head -c 60)
+          kubectl annotate deployment/${APP_NAME} -n ${APP_NAME} \
+            kubernetes.io/change-cause="${GITHUB_SHA::7}: ${COMMIT_MSG} (by ${GITHUB_ACTOR})" --overwrite
+
+          kubectl rollout status -n ${APP_NAME} deploy/${APP_NAME} --timeout=180s
+          echo "✅ 部署完成 → https://${APP_NAME}.${DOMAIN}"
+
+      - name: Cleanup old images
+        if: always()
+        run: |
+          docker images "${REGISTRY}/${APP_NAME}" --format '{{.Tag}}' | \
+            grep -v latest | sort -r | tail -n +6 | \
+            xargs -I{} docker rmi "${REGISTRY}/${APP_NAME}:{}" 2>/dev/null || true
