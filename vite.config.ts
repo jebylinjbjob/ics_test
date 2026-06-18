@@ -5,6 +5,17 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { execSync } from 'child_process';
 
 function getGitInfo() {
+	// Prefer build-time env vars injected via Docker --build-arg or CI env,
+	// fall back to running git commands (local dev only).
+	if (process.env.GIT_BRANCH) {
+		return {
+			branch: process.env.GIT_BRANCH ?? 'unknown',
+			version: process.env.GIT_VERSION ?? 'unknown',
+			lastCommitTime: process.env.GIT_LAST_COMMIT_TIME ?? 'unknown',
+			isDirty: process.env.GIT_IS_DIRTY === 'true',
+			commitHash: process.env.GIT_COMMIT_HASH ?? 'unknown'
+		};
+	}
 	try {
 		const branch = execSync('git branch --show-current').toString().trim();
 		const version = execSync('git describe --tags --always').toString().trim();

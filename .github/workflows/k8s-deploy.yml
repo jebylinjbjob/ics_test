@@ -55,7 +55,13 @@ jobs:
       - name: Build & Push Image
         run: |
           TAG="${REGISTRY}/${APP_NAME}:${GITHUB_SHA::7}"
-          docker build -t "$TAG" -t "${REGISTRY}/${APP_NAME}:latest" -f Dockerfile .
+          docker build -t "$TAG" -t "${REGISTRY}/${APP_NAME}:latest" -f Dockerfile \
+            --build-arg GIT_BRANCH="$(git branch --show-current)" \
+            --build-arg GIT_VERSION="$(git describe --tags --always)" \
+            --build-arg GIT_LAST_COMMIT_TIME="$(git log -1 --format=%ci)" \
+            --build-arg GIT_IS_DIRTY="false" \
+            --build-arg GIT_COMMIT_HASH="${GITHUB_SHA}" \
+            .
           docker push "$TAG"
           docker push "${REGISTRY}/${APP_NAME}:latest"
           echo "IMAGE=$TAG" >> $GITHUB_ENV
