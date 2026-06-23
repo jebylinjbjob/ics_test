@@ -11,7 +11,7 @@ on:
 jobs:
   lint:
     name: Lint, Test, and Build
-    runs-on: [self-hosted, k3s-runner]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/install-action@just
