@@ -23,7 +23,7 @@
 just init
 ```
 
-此命令會執行 `npm install` 安裝所有項目依賴。
+此命令會執行 `pnpm install` 安裝所有項目依賴。
 
 ## 可用命令
 
@@ -57,26 +57,27 @@ just build
 
 ### `just lint`
 
-運行代碼風格檢查和 ESLint 檢驗。
+運行 Oxlint 靜態檢查。
 
 ```bash
 just lint
 ```
 
-此命令會檢查：
-
-- Prettier 代碼格式
-- ESLint 代碼質量規則
-
 ### `just fmt`
 
-自動格式化代碼（使用 Prettier）。
+自動格式化代碼（使用 Oxfmt）。
 
 ```bash
 just fmt
 ```
 
-此命令會修復所有格式不符合 Prettier 標準的代碼。
+### `just fmt-check`
+
+檢查代碼格式是否符合 Oxfmt 設定（不修改檔案）。
+
+```bash
+just fmt-check
+```
 
 ### `just test`
 
@@ -107,8 +108,10 @@ just ci
 此命令依序執行：
 
 1. `just check` - 類型檢查
-2. `just lint` - 代碼風格檢查
-3. `just build` - 構建項目
+2. `just fmt-check` - 格式檢查
+3. `just lint` - 靜態檢查
+4. `just test` - 測試
+5. `just build` - 構建項目
 
 **推薦在提交代碼前運行此命令。**
 
@@ -169,7 +172,7 @@ A: 嘗試運行 `just init` 重新安裝依賴。
 - `tsconfig.json` - TypeScript 配置
 - `svelte.config.js` - Svelte/SvelteKit 配置
 - `tailwind.config.js` - Tailwind 配置
-- `eslint.config.js` - ESLint 配置
+- `.oxfmtrc.json` - Oxfmt 格式化配置
 
 ## 更多資訊
 
