@@ -3,17 +3,17 @@ name: Docker Image
 on:
   # main branch: 等 CI workflow 成功後才觸發，確保品質把關
   workflow_run:
-    workflows: ["CI"]
+    workflows: ['CI']
     types: [completed]
     branches: [main]
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - 'v[0-9]+.[0-9]+.[0-9]+'
   pull_request:
     branches:
       - main
   schedule:
-    - cron: "0 0 1 1,4,7,10 *" # 每季掃描：1月、4月、7月、10月 1日
+    - cron: '0 0 1 1,4,7,10 *' # 每季掃描：1月、4月、7月、10月 1日
   workflow_dispatch:
 
 jobs:
@@ -59,7 +59,7 @@ jobs:
           image-ref: ghcr.io/${{ env.REPO }}:latest
           format: table
           severity: CRITICAL,HIGH
-          exit-code: "1"
+          exit-code: '1'
 
   # ── PR：僅建置 amd64 + Trivy 掃描（不 push）────────────────────────────
   build-pr:
@@ -109,7 +109,7 @@ jobs:
           image-ref: ${{ env.REPO }}:scan
           format: table
           severity: CRITICAL,HIGH
-          exit-code: "1"
+          exit-code: '1'
 
   # ── 正式建置：雙平台原生 runner 並行（無 QEMU）─────────────────────────
   build:
@@ -229,7 +229,7 @@ jobs:
           image-ref: ghcr.io/${{ env.REPO }}@${{ steps.digest.outputs.value }}
           format: table
           severity: CRITICAL,HIGH
-          exit-code: "1"
+          exit-code: '1'
 
   # ── 合併 manifest 並推送最終 tag ───────────────────────────────────────
   merge:
