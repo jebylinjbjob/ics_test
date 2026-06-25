@@ -1,6 +1,9 @@
 import { page } from 'vitest/browser';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
+
+vi.mock('$app/stores', () => import('../test/mock-app-stores').then((m) => m.mockAppStores));
+
 import Page from './+page.svelte';
 
 describe('/+page.svelte', () => {

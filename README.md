@@ -29,10 +29,10 @@ cp .env.example .env
 - Tailwind CSS
 - Skeleton
 
-### 格式化工具
+### 程式碼品質工具
 
-- Eslint
-- Prettier
+- Oxlint（靜態檢查）
+- Oxfmt（程式碼格式化）
 
 ### 追蹤與分析工具
 
