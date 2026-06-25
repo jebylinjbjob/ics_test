@@ -13,7 +13,8 @@ ENV GIT_BRANCH=$GIT_BRANCH \
     GIT_IS_DIRTY=$GIT_IS_DIRTY \
     GIT_COMMIT_HASH=$GIT_COMMIT_HASH
 
-RUN npm install -g pnpm@10.34.1
+RUN apk upgrade --no-cache \
+    && npm install -g pnpm@10.34.1
 
 WORKDIR /app
 
@@ -28,6 +29,11 @@ RUN pnpm prune --prod
 
 # ── Stage 2: Production ──────────────────────────────────────
 FROM node:20-alpine AS runner
+
+# Patch OS CVEs (e.g. OpenSSL) and drop npm/npx — runtime only needs node.
+RUN apk upgrade --no-cache \
+    && rm -rf /usr/local/lib/node_modules/npm \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx
 
 WORKDIR /app
 
