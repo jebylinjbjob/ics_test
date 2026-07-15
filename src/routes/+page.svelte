@@ -1,12 +1,15 @@
 <script lang="ts">
-	import { DownloadIcon, CopyIcon, CheckIcon, LinkIcon } from '@lucide/svelte';
+	import { DownloadIcon, CopyIcon, CheckIcon, LinkIcon, CalendarPlusIcon } from '@lucide/svelte';
 	import { page } from '$app/stores';
+	import { googleCalendarEventUrl, googleCalendarSubscribeUrl } from '$lib/google-calendar';
+	import { sampleEvents } from '$lib/ics';
 
 	let copied = $state(false);
 
 	const origin = $derived($page.url.origin);
 	const subscribeUrl = $derived(`${origin}/calendar.ics`);
 	const webcalUrl = $derived(subscribeUrl.replace(/^https?:/, 'webcal:'));
+	const googleSubscribeUrl = $derived(googleCalendarSubscribeUrl(subscribeUrl));
 
 	async function copySubscribeUrl() {
 		await navigator.clipboard.writeText(subscribeUrl);
@@ -84,6 +87,47 @@
 
 		<p class="text-surface-600-300 text-xs">
 			注意：外部行事曆服務無法訂閱 `localhost`，部署至公開環境後請用正式網域重新測試。
+		</p>
+	</section>
+
+	<section class="space-y-4 card p-6">
+		<h2 class="text-xl font-semibold">情境三：加入 Google 行事曆</h2>
+		<p class="text-surface-600-300 text-sm">
+			一鍵開啟 Google 行事曆：可訂閱整份 ICS（自動同步後續更新），或將單一事件以預填表單方式加入。
+		</p>
+
+		<div class="space-y-1">
+			<p class="text-sm font-medium">訂閱整份行事曆</p>
+			<a
+				href={googleSubscribeUrl}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="btn inline-flex items-center gap-2 preset-filled"
+			>
+				<CalendarPlusIcon class="size-4" />
+				在 Google 行事曆訂閱
+			</a>
+		</div>
+
+		<div class="space-y-2">
+			<p class="text-sm font-medium">加入單一事件</p>
+			<div class="flex flex-wrap gap-2">
+				{#each sampleEvents as event (event.uid)}
+					<a
+						href={googleCalendarEventUrl(event)}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="btn inline-flex items-center gap-2 preset-tonal"
+					>
+						<CalendarPlusIcon class="size-4" />
+						{event.title}
+					</a>
+				{/each}
+			</div>
+		</div>
+
+		<p class="text-surface-600-300 text-xs">
+			注意：訂閱功能同樣無法使用 `localhost`；單一事件連結則不受此限制。
 		</p>
 	</section>
 </div>
