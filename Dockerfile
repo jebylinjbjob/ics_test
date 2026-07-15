@@ -22,7 +22,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN pnpm run build
+# Build with the Node adapter (Cloudflare adapter is the default outside Docker)
+RUN DEPLOY_TARGET=node pnpm run build
 
 # Remove devDependencies before copying to runner
 RUN pnpm prune --prod
